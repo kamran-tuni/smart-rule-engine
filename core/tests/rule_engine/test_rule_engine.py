@@ -1,14 +1,22 @@
 import unittest
 from uuid import uuid4
 from unittest import mock
+import json
 
 from core.services.ai import AIClient
 from core.usecases.rule_engine import (
     GenerateRuleChainUseCase,
+    RuleChainExecutorUsecase,
+    AllRuleChainsExecutorUsecase,
 )
 from core.tests.rule_engine.mock import (
     mocked_rule_chain,
     mocked_rule_chain_repo_create,
+    mocked_context,
+    mocked_output_context,
+    mocked_rule_chain_repo_get_all_entries,
+    mocked_output_context_all_rule_chains,
+    mocked_context_all_rule_chains
 )
 
 
@@ -106,6 +114,40 @@ class TestGenerateRuleChainUseCase(unittest.TestCase):
         self.assertEqual(response, self.mocked_ai_response_missing_info)
 
         AIClient.clear_instance()
+
+
+class TestRuleChainExecutorUsecase(unittest.TestCase):
+    def setUp(self):
+        self.usecase = RuleChainExecutorUsecase()
+        self.usecase.set_params(
+            rule_chain_data=json.loads(mocked_rule_chain),
+            context=mocked_context
+        )
+
+    def test_execute(self):
+        response_data = self.usecase.execute()
+        self.assertEqual(response_data, mocked_output_context)
+
+
+class TestAllRuleChainsExecutorUsecase(unittest.TestCase):
+    def setUp(self):
+        self.rule_chain_repo = mock.Mock()
+        self.rule_chain_repo.get_all_entries.side_effect = (
+            mocked_rule_chain_repo_get_all_entries
+        )
+
+        self.rule_chain_executor_usecase = RuleChainExecutorUsecase()
+        self.all_rule_chain_executor_usecase = AllRuleChainsExecutorUsecase(
+            rule_chain_repo=self.rule_chain_repo,
+            rule_chain_executor_usecase=self.rule_chain_executor_usecase
+        )
+        self.all_rule_chain_executor_usecase.set_params(
+            context=mocked_context_all_rule_chains
+        )
+
+    def test_execute(self):
+        response_data = self.all_rule_chain_executor_usecase.execute()
+        self.assertEqual(response_data, mocked_output_context_all_rule_chains)
 
 
 if __name__ == '__main__':

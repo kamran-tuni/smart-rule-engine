@@ -1,3 +1,5 @@
+from typing import List
+
 from core.entities.rule_engine import RuleChainEntity
 
 
@@ -6,5 +8,7 @@ class RuleChainRepo:
         pass
 
     def create(self, nodes: list) -> RuleChainEntity:
-        breakpoint()
+        return
+
+    def get_all_entries(self) -> List[RuleChainEntity]:
         return

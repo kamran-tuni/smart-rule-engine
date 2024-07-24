@@ -48,7 +48,7 @@ class NodeEntity(BaseEntity):
         SwitchNodeConfigEntity,
         ActionNodeConfigEntity
     ]
-    target_node_id: UUID
+    target_node_id: Union[UUID, List[UUID]]
 
     @classmethod
     def from_dict(cls, data: dict):
@@ -62,7 +62,10 @@ class NodeEntity(BaseEntity):
             config = config_class.from_dict(config_data)
 
         target_node_id = data.get('target_node_id')
-        target_node_id = UUID(target_node_id) if target_node_id else None
+        if isinstance(target_node_id, list):
+            target_node_id = [UUID(item) for item in target_node_id]
+        else:
+            target_node_id = UUID(target_node_id) if target_node_id else None
 
         return cls(
             id=UUID(data['id']),
@@ -82,7 +85,11 @@ class NodeEntity(BaseEntity):
                 if isinstance(self.config, list)
                 else self.config.to_dict()
             ),
-            'target_node_id': str(self.target_node_id) if self.target_node_id else None
+            'target_node_id': (
+                [str(item) for item in self.target_node_id]
+                if isinstance(self.target_node_id, list)
+                else (str(self.target_node_id) if self.target_node_id else None)
+            )
         }
         return data
 

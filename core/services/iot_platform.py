@@ -33,19 +33,19 @@ class ThingsboardClient(IoTPlatformClient):
         return {'X-Authorization': f'Bearer {self.api_key}'}
 
     def get_devices(self, page_size=100, page=0):
-        url = f'{self.base_url}/api/tenant/deviceInfos?pageSize={page_size}&page={page}'
+        url = f'https://{self.base_url}/api/tenant/deviceInfos?pageSize={page_size}&page={page}'
         response = requests.get(url, headers=self._get_headers())
         response.raise_for_status()
         return response.json()['data']
 
     def get_device_attributes(self, device_id):
-        url = f'{self.base_url}/api/plugins/telemetry/DEVICE/{device_id}/keys/attributes'
+        url = f'https://{self.base_url}/api/plugins/telemetry/DEVICE/{device_id}/keys/attributes'
         response = requests.get(url, headers=self._get_headers())
         response.raise_for_status()
         return response.json()
 
     def get_device_telemetry(self, device_id):
-        url = f'{self.base_url}/api/plugins/telemetry/DEVICE/{device_id}/keys/timeseries'
+        url = f'https://{self.base_url}/api/plugins/telemetry/DEVICE/{device_id}/keys/timeseries'
         response = requests.get(url, headers=self._get_headers())
         response.raise_for_status()
         return response.json()

@@ -3,6 +3,7 @@ from core.usecases.rule_engine import (
     RuleChainExecutorUsecase,
     AllRuleChainsExecutorUsecase,
 )
+from core.factories.iot_platform import UpdateDeviceAttributeUseCaseFactory
 from core.db_repos.rule_engine import RuleChainRepo
 
 
@@ -15,7 +16,10 @@ class RuleChainRepoFactory:
 class RuleChainExecutorUsecaseFactory:
     @staticmethod
     def get() -> RuleChainExecutorUsecase:
-        return RuleChainExecutorUsecase()
+        update_device_attribute_use_case = UpdateDeviceAttributeUseCaseFactory.get()
+        return RuleChainExecutorUsecase(
+            update_device_attribute_use_case=update_device_attribute_use_case
+        )
 
 
 class AllRuleChainsExecutorUsecaseFactory:

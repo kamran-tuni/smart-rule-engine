@@ -1,6 +1,7 @@
 from core.services.ai import AIClient
 from core.config.rule_engine import system_prompt, system_data, expected_rule_chain
 from core.utils.json import get_valid_json
+from core.usecases.iot_platform import UpdateDeviceAttributeUsecase
 from core.entities.rule_engine import (
     NodeEntity,
     RuleChainEntity,
@@ -60,8 +61,8 @@ class GenerateRuleChainUseCase:
 
 
 class RuleChainExecutorUsecase:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, update_device_attribute_usecase: UpdateDeviceAttributeUsecase) -> None:
+        self.update_device_attribute_usecase = update_device_attribute_usecase
 
     def set_params(self, rule_chain_data: list, context: Dict[str, Any]):
         self.rule_chain_entity = RuleChainEntity.from_dict(rule_chain_data)
@@ -128,11 +129,24 @@ class RuleChainExecutorUsecase:
                 return str(node.target_node_id[index])
         return None
 
-    def execute_action_node(self, node: NodeEntity) -> Optional[str]:
+    def execute_action_node(self, node: NodeEntity) -> None:
         for action in node.config:
             device = self.context["devices"].setdefault(action.device_id, {})
             device[action.parameter_id] = action.value
+            self.perform_action(
+                device_id=action.device_id,
+                key=action.parameter_id,
+                value=action.value
+            )
         return None
+
+    def perform_action(self, device_id, key, value) -> None:
+        self.update_device_attribute_usecase.set_params(
+            device_id=device_id,
+            key=key,
+            value=value
+        )
+        self.update_device_attribute_usecase.execute()
 
 
 class AllRuleChainsExecutorUsecase:

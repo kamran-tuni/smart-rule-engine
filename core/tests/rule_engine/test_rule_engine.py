@@ -9,6 +9,9 @@ from core.usecases.rule_engine import (
     RuleChainExecutorUsecase,
     AllRuleChainsExecutorUsecase,
 )
+from core.usecases.iot_platform import (
+    UpdateDeviceAttributeUsecase,
+)
 from core.tests.rule_engine.mock import (
     mocked_rule_chain,
     mocked_rule_chain_repo_create,
@@ -18,9 +21,23 @@ from core.tests.rule_engine.mock import (
     mocked_output_context_all_rule_chains,
     mocked_context_all_rule_chains
 )
+from core.services.iot_platform import ThingsboardClient
 
 
-class TestGenerateRuleChainUseCase(unittest.TestCase):
+class TestBaseRuleChain(unittest.TestCase):
+    def setUp(self):
+        self.iot_platform_client = ThingsboardClient()
+        self.iot_platform_client.update_device_attribute = mock.MagicMock(return_value=None)
+
+        self.update_device_attribute_usecase = UpdateDeviceAttributeUsecase(
+            iot_platform_client=self.iot_platform_client
+        )
+        self.rule_chain_executor_usecase = RuleChainExecutorUsecase(
+            update_device_attribute_usecase=self.update_device_attribute_usecase
+        )
+
+
+class TestGenerateRuleChainUseCase(TestBaseRuleChain):
     def setUp(self):
         self.user_prompt_with_missing_info = """
             If the temperature in Room 24 is 2 degrees below the setpoint,
@@ -116,27 +133,29 @@ class TestGenerateRuleChainUseCase(unittest.TestCase):
         AIClient.clear_instance()
 
 
-class TestRuleChainExecutorUsecase(unittest.TestCase):
+class TestRuleChainExecutorUsecase(TestBaseRuleChain):
     def setUp(self):
-        self.usecase = RuleChainExecutorUsecase()
-        self.usecase.set_params(
+        super(TestRuleChainExecutorUsecase, self).setUp()
+
+        self.rule_chain_executor_usecase.set_params(
             rule_chain_data=json.loads(mocked_rule_chain),
             context=mocked_context
         )
 
     def test_execute(self):
-        response_data = self.usecase.execute()
+        response_data = self.rule_chain_executor_usecase.execute()
         self.assertEqual(response_data, mocked_output_context)
 
 
-class TestAllRuleChainsExecutorUsecase(unittest.TestCase):
+class TestAllRuleChainsExecutorUsecase(TestBaseRuleChain):
     def setUp(self):
+        super(TestAllRuleChainsExecutorUsecase, self).setUp()
+
         self.rule_chain_repo = mock.Mock()
         self.rule_chain_repo.get_all_entries.side_effect = (
             mocked_rule_chain_repo_get_all_entries
         )
 
-        self.rule_chain_executor_usecase = RuleChainExecutorUsecase()
         self.all_rule_chain_executor_usecase = AllRuleChainsExecutorUsecase(
             rule_chain_repo=self.rule_chain_repo,
             rule_chain_executor_usecase=self.rule_chain_executor_usecase

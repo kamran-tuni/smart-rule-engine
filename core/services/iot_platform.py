@@ -84,3 +84,11 @@ class ThingsboardClient(IoTPlatformClient):
         ]
 
         return DeviceDataEntity(device_id, device['name'], parameters)
+
+    def update_device_attribute(self, device_id: str, key: str, value: str) -> None:
+        url = f'https://{self.base_url}/api/plugins/telemetry/DEVICE/{device_id}/attributes/SHARED_SCOPE'
+        payload = {
+            key: value
+        }
+        response = requests.post(url, headers=self._get_headers(), json=payload)
+        response.raise_for_status()

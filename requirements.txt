@@ -1,3 +1,4 @@
+wheel==0.40.0
 openai==1.36.1
 python-dotenv==1.0.1
 requests==2.32.3
@@ -5,3 +6,11 @@ py-mini-racer==0.6.0
 celery==5.4.0
 redis==5.0.7
 websockets==12.0
+django==4.2.1
+drf-yasg==1.21.5
+djangorestframework==3.14.0
+psycopg2-binary==2.9.6
+gunicorn==20.1.0
+django-tenants==3.5.0
+djangorestframework-datatables==0.7.0
+django-cors-headers==4.0.0

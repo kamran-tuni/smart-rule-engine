@@ -4,7 +4,7 @@ import setup_path
 import websockets
 from typing import List, Dict, Optional
 
-from core.factories.iot_platform import ExtractDeviceDataUsecaseFactory
+from core.factories.iot_platform import ListDeviceDataByIntegrationIdUseCaseFactory
 from core.factories.integration import ListIntegrationUseCaseFactory
 from core.tasks.rule_engine.handler import ExecuteAllRuleChainsTask
 
@@ -40,7 +40,7 @@ class IoTPlatformTelemetryListener:
             "tsSubCmds": [
                 {
                     "entityType": "DEVICE",
-                    "entityId": device["id"],
+                    "entityId": str(device["device_id"]),
                     "scope": "LATEST_TELEMETRY",
                     "cmdId": index
                 }
@@ -62,7 +62,8 @@ class IoTPlatformTelemetryListener:
         data = message.get("data")
         if not data:
             return None
-        device_id = self.devices_data[message["subscriptionId"]]["id"]
+
+        device_id = str(self.devices_data[message["subscriptionId"]]["device_id"])
         for parameter, value in data.items():
             context["devices"][device_id] = {
                 parameter: value[0][1]
@@ -74,20 +75,18 @@ class IoTPlatformTelemetryListener:
         execute_all_rule_chain_task.delay(tenant=self.tenant, context=context)
 
 
-class IoTPlatformDeviceExtractor:
-    @staticmethod
-    def extract_devices() -> List[Dict]:
-        extract_device_data_usecase = ExtractDeviceDataUsecaseFactory.get()
-        return extract_device_data_usecase.execute()
 
 
 async def manage_tenant_subscriptions(tenant) -> None:
     with schema_context(tenant):
-        devices_data = IoTPlatformDeviceExtractor.extract_devices()
-
         tasks = []
         integrations = await get_all_integrations(tenant=tenant)
         for integration in integrations:
+            devices_data = await get_all_devices(
+                tenant=tenant,
+                integration_id=integration["id"]
+            )
+
             listener = IoTPlatformTelemetryListener(
                 tenant=tenant,
                 api_key=integration["api_key"],
@@ -97,6 +96,14 @@ async def manage_tenant_subscriptions(tenant) -> None:
             tasks.append(await listener.listen_to_all_devices_telemetry())
 
         await tasks
+
+
+@sync_to_async
+def get_all_devices(tenant, integration_id: int) -> List[Dict]:
+    with schema_context(tenant):
+        list_device_data_by_integration_id_usecase = ListDeviceDataByIntegrationIdUseCaseFactory.get()
+        list_device_data_by_integration_id_usecase.set_params(integration_id=integration_id)
+        return list_device_data_by_integration_id_usecase.execute()
 
 
 @sync_to_async

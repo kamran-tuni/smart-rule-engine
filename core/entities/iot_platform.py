@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from uuid import UUID
-from typing import List
+from typing import List, Optional
 
 from core.entities.base import BaseEntity
 
@@ -16,13 +16,21 @@ class DeviceParameterEntity(BaseEntity):
 
 @dataclass
 class DeviceDataEntity(BaseEntity):
-    id: UUID
+    device_id: UUID
     name: str
     parameters: List[DeviceParameterEntity]
+    integration_id: Optional[int] = None
+    id: Optional[int] = None
 
-    def to_dict(self) -> dict:
-        return {
-            'id': self.id,
+    def to_dict(self, exclude_fields: List[str] = []):
+        data = {
+            'device_id': self.device_id,
             'name': self.name,
-            'parameters': [parameter.to_dict() for parameter in self.parameters]
+            'parameters': [parameter.to_dict() for parameter in self.parameters],
+            'integration_id': self.integration_id,
+            'id': id
         }
+        for field in exclude_fields:
+            data.pop(field)
+
+        return data

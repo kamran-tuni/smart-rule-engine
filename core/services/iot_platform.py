@@ -8,8 +8,12 @@ from core.entities.iot_platform import DeviceParameterEntity, DeviceDataEntity
 
 class IoTPlatformClient(ABC):
     def __init__(self):
-        self.api_key = IoT_PLATFORM_API_KEY
-        self.base_url = IoT_PLATFORM_BASE_URL
+        self.api_key = None
+        self.base_url = None
+
+    def set_params(self, api_key, base_url):
+        self.api_key = api_key
+        self.base_url = base_url
 
     @abstractmethod
     def get_devices(self, page_size, page):

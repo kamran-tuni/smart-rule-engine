@@ -30,6 +30,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 CELERY_IMPORTS = (
     'core.tasks.rule_engine.handler',
+    'core.tasks.iot_platform.handler',
 )
 
 ALLOWED_HOSTS = ['*']

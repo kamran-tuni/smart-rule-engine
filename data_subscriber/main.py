@@ -4,17 +4,23 @@ import setup_path
 import websockets
 from typing import List, Dict, Optional
 
-from settings import IoT_PLATFORM_API_KEY, IoT_PLATFORM_BASE_URL
 from core.factories.iot_platform import ExtractDeviceDataUsecaseFactory
+from core.factories.integration import ListIntegrationUseCaseFactory
 from core.tasks.rule_engine.handler import ExecuteAllRuleChainsTask
+
+from django_tenants.utils import get_tenant_model, get_public_schema_name
+from django_tenants.utils import schema_context
+
+from asgiref.sync import sync_to_async
 
 
 class IoTPlatformTelemetryListener:
-    def __init__(self, api_key: str, base_url: str, devices_data: List[Dict]):
+    def __init__(self, api_key: str, base_url: str, devices_data: List[Dict], tenant: str):
         self.api_key = api_key
         self.base_url = base_url
         self.devices_data = devices_data
         self.uri = f"wss://{base_url}/api/ws/plugins/telemetry?token={api_key}"
+        self.tenant = tenant
 
     async def listen_to_all_devices_telemetry(self) -> None:
         async with websockets.connect(self.uri) as websocket:
@@ -65,7 +71,7 @@ class IoTPlatformTelemetryListener:
 
     def execute_rule_chains(self, context: Dict) -> None:
         execute_all_rule_chain_task = ExecuteAllRuleChainsTask()
-        execute_all_rule_chain_task.delay(context=context)
+        execute_all_rule_chain_task.delay(tenant=self.tenant, context=context)
 
 
 class IoTPlatformDeviceExtractor:
@@ -75,16 +81,44 @@ class IoTPlatformDeviceExtractor:
         return extract_device_data_usecase.execute()
 
 
-def main() -> None:
-    devices_data = IoTPlatformDeviceExtractor.extract_devices()
-    listener = IoTPlatformTelemetryListener(
-        api_key=IoT_PLATFORM_API_KEY,
-        base_url=IoT_PLATFORM_BASE_URL,
-        devices_data=devices_data
+async def manage_tenant_subscriptions(tenant) -> None:
+    with schema_context(tenant):
+        devices_data = IoTPlatformDeviceExtractor.extract_devices()
+
+        tasks = []
+        integrations = await get_all_integrations(tenant=tenant)
+        for integration in integrations:
+            listener = IoTPlatformTelemetryListener(
+                tenant=tenant,
+                api_key=integration["api_key"],
+                base_url=integration["base_url"],
+                devices_data=devices_data
+            )
+            tasks.append(await listener.listen_to_all_devices_telemetry())
+
+        await tasks
+
+
+@sync_to_async
+def get_all_integrations(tenant) -> List[Dict]:
+    with schema_context(tenant):
+        list_integration_use_case = ListIntegrationUseCaseFactory.get()
+        integrations = list_integration_use_case.execute()
+        return integrations
+
+
+async def main() -> None:
+    tenant_model = get_tenant_model()
+    tenants = await sync_to_async(list)(
+        tenant_model.objects.exclude(schema_name=get_public_schema_name())
     )
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(listener.listen_to_all_devices_telemetry())
+
+    tasks = []
+    for tenant in tenants:
+        tasks.append(manage_tenant_subscriptions(tenant=tenant.schema_name))
+
+    await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

@@ -16,9 +16,9 @@ class RuleChainRepoFactory:
 class RuleChainExecutorUsecaseFactory:
     @staticmethod
     def get() -> RuleChainExecutorUsecase:
-        update_device_attribute_use_case = UpdateDeviceAttributeUseCaseFactory.get()
+        update_device_attribute_usecase = UpdateDeviceAttributeUseCaseFactory.get()
         return RuleChainExecutorUsecase(
-            update_device_attribute_use_case=update_device_attribute_use_case
+            update_device_attribute_usecase=update_device_attribute_usecase
         )
 
 

@@ -86,15 +86,23 @@ class ExtractAllIntegrationsDeviceDataUsecase:
 
 
 class UpdateDeviceAttributeUsecase:
-    def __init__(self, iot_platform_client):
+    def __init__(self, iot_platform_client, integration_repo):
         self.iot_platform_client = iot_platform_client
+        self.integration_repo = integration_repo
 
-    def set_params(self, device_id, key, value):
+    def set_params(self, integration_id, device_id, key, value):
+        self.integration_id = integration_id
         self.device_id = device_id
         self.key = key
         self.value = value
 
+        self.integration_entity = self.integration_repo.get_by_id(id=integration_id)
+
     def execute(self):
+        self.iot_platform_client.set_params(
+            base_url=self.integration_entity.base_url,
+            api_key=self.integration_entity.api_key
+        )
         self.iot_platform_client.update_device_attribute(
             device_id=self.device_id,
             key=self.key,

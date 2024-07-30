@@ -5,6 +5,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from backend.app.adapters import integration
+from backend.app.adapters import rule_engine
 
 admin.site.site_header = "Smart Rule Engine Admin Panel"
 admin.site.site_title = "Smart Rule Engine Admin Panel"
@@ -32,8 +33,24 @@ urlpatterns = [
         name='tenant_list'
     ),
     path(
-        'api/v1/tenant/<int:pk>/',
+        'api/v1/integration/<int:pk>/',
         integration.IntegrationDetailView.as_view(),
         name='tenant_detail'
     ),
+    path(
+        'api/v1/rule-chain/',
+        rule_engine.RuleChainListView.as_view(),
+        name='rule_chain_list'
+    ),
+    path(
+        'api/v1/rule-chain/<int:pk>/',
+        rule_engine.RuleChainDetailView.as_view(),
+        name='rule_chain_detail'
+    ),
+    path(
+        'api/v1/rule-chain/generate/',
+        rule_engine.GenerateRuleChainView.as_view(),
+        name='generate_rulechain'
+    ),
+
 ]

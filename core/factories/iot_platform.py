@@ -61,8 +61,10 @@ class UpdateDeviceAttributeUseCaseFactory:
     @staticmethod
     def get() -> UpdateDeviceAttributeUsecase:
         iot_platform_client = ThingsboardClientFactory.get()
+        integration_repo = IntegrationRepoFactory.get()
 
         return UpdateDeviceAttributeUsecase(
             iot_platform_client=iot_platform_client,
+            integration_repo=integration_repo,
         )
 

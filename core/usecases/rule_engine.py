@@ -5,7 +5,8 @@ from core.usecases.iot_platform import UpdateDeviceAttributeUsecase
 from core.entities.rule_engine import (
     NodeEntity,
     RuleChainEntity,
-    NodeTypes
+    NodeTypes,
+    RuleChainGenerateEntity,
 )
 from core.db_repos.rule_engine import RuleChainRepo
 
@@ -14,6 +15,56 @@ from typing import Dict, Any, Optional, List
 from py_mini_racer import py_mini_racer
 
 
+class ListRuleChainUseCase:
+    def __init__(self, rule_chain_repo: RuleChainRepo) -> None:
+        self.rule_chain_repo = rule_chain_repo
+        self.rule_chain_entities: Optional[List[RuleChainEntity]] = []
+
+    def execute(self) -> List[dict]:
+        self.rule_chain_entities = self.rule_chain_repo.get_all_entries()
+        return [entity.to_dict() for entity in self.rule_chain_entities]
+
+
+class RetrieveRuleChainUseCase:
+    def __init__(self, rule_chain_repo: RuleChainRepo) -> None:
+        self.rule_chain_repo = rule_chain_repo
+        self.rule_chain_entity: Optional[RuleChainEntity] = None
+        self.rule_chain_id: Optional[int] = None
+
+    def set_params(self, rule_chain_id: int) -> None:
+        self.rule_chain_id = rule_chain_id
+
+    def execute(self) -> dict:
+        self.rule_chain_entity = self.rule_chain_repo.get_by_id(
+            id=self.rule_chain_id
+        )
+        return self.rule_chain_entity.to_dict()
+
+
+class DeleteRuleChainUseCase:
+    def __init__(self, rule_chain_repo: RuleChainRepo) -> None:
+        self.rule_chain_repo = rule_chain_repo
+        self.rule_chain_id: Optional[int] = None
+
+    def set_params(self, rule_chain_id: int) -> None:
+        self.rule_chain_id = rule_chain_id
+
+    def execute(self) -> None:
+        self.rule_chain_repo.delete_by_id(id=self.rule_chain_id)
+
+
+class BulkDeleteRuleChainUseCase:
+    def __init__(self, rule_chain_repo: RuleChainRepo) -> None:
+        self.rule_chain_repo = rule_chain_repo
+        self.rule_chain_ids: Optional[List[int]] = None
+
+    def set_params(self, rule_chain_ids: List[int]) -> None:
+        self.rule_chain_ids = rule_chain_ids
+
+    def execute(self) -> None:
+        for _id in self.rule_chain_ids:
+            self.rule_chain_repo.delete_by_id(id=_id)
+
 
 class GenerateRuleChainUseCase:
     def __init__(self, ai_client: AIClient, rule_chain_repo: RuleChainRepo):
@@ -21,42 +72,59 @@ class GenerateRuleChainUseCase:
         self.rule_chain_repo = rule_chain_repo
         self.rule_chain_entity = None
 
-    def execute(self, user_prompt: str, chat_history: list = []):
-        result = False
+    def set_params(self, data):
+        self.rule_chain_generate_entity = RuleChainGenerateEntity(**data)
 
-        if not chat_history:
-            messages = [
-                {"role": "system", "content": f"{system_prompt}{system_data}{expected_rule_chain}"},
-                {"role": "user", "content": user_prompt}
-            ]
-        else:
-            messages = chat_history + [{"role": "user", "content": user_prompt}]
+    def execute(self):
+        messages = [
+            {
+                "role": "system",
+                "content": f"{system_prompt}{system_data}{expected_rule_chain}"
+            }
+        ] + self.rule_chain_generate_entity.chat_history + [
+            {
+                "role": "user",
+                "content": self.rule_chain_generate_entity.user_prompt
+            }
+        ]
 
         response = self.ai_client.send_prompt(
             messages=messages
         )
 
         try:
+            self.rule_chain_generate_entity.is_generated = True
             response_data = get_valid_json(response)
-            result = True
+            response_data["integration_id"] = self.rule_chain_generate_entity.integration_id
             self.rule_chain_entity = RuleChainEntity.from_dict(response_data)
-
-            # TODO: Use the entity to perform any buisness logic
 
             self.save_rule_chain()
 
-            # TODO: Store the rule chain in db through db repo
-
-            chat_history = messages + [{"role": "assistant", "content": "Rule Chain is generated successfully!"}]
-        except Exception:
-            chat_history = messages + [{"role": "assistant", "content": response}]
-
-        return result, response, chat_history
+            self.rule_chain_generate_entity.chat_history = messages + [
+                {
+                    "role": "assistant",
+                    "content": "Rule Chain is generated successfully!"
+                }
+            ]
+        except Exception as ex:
+            print(ex)
+            self.rule_chain_generate_entity.is_generated = False
+            self.rule_chain_generate_entity.chat_history = messages + [
+                {
+                    "role": "assistant",
+                    "content": response
+                }
+            ]
+        self.rule_chain_generate_entity.chat_history = [
+            entry for entry in self.rule_chain_generate_entity.chat_history
+            if entry["role"] != "system"
+        ]
+        return self.rule_chain_generate_entity.to_dict()
 
 
     def save_rule_chain(self):
         self.rule_chain_repo.create(
-            **self.rule_chain_entity.to_dict()
+            **self.rule_chain_entity.to_dict(exclude_fields=['id'])
         )
 
 
@@ -142,6 +210,7 @@ class RuleChainExecutorUsecase:
 
     def perform_action(self, device_id, key, value) -> None:
         self.update_device_attribute_usecase.set_params(
+            integration_id=self.rule_chain_entity.integration_id,
             device_id=device_id,
             key=key,
             value=value

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Union, List
+from typing import Union, List, Optional
 from uuid import UUID
 from enum import Enum
 
@@ -106,14 +106,36 @@ class NodeEntity(BaseEntity):
 
 @dataclass
 class RuleChainEntity(BaseEntity):
+    name: str
     nodes: List[NodeEntity]
+    integration_id: int
+    id: Optional[int] = None
 
     @classmethod
     def from_dict(cls, data: dict):
+        id = data.get("id", None)
+        name = data["name"]
         nodes = [NodeEntity.from_dict(node_data) for node_data in data['nodes']]
-        return cls(nodes=nodes)
+        integration_id = data["integration_id"]
+        return cls(id=id, name=name, nodes=nodes, integration_id=integration_id)
 
-    def to_dict(self) -> dict:
-        return {
-            'nodes': [node.to_dict() for node in self.nodes]
+    def to_dict(self, exclude_fields: List[str] = []) -> dict:
+        data = {
+            'name': self.name,
+            'nodes': [node.to_dict() for node in self.nodes],
+            'integration_id': self.integration_id,
+            'id': self.id
         }
+        for field in exclude_fields:
+            data.pop(field)
+
+        return data
+
+
+@dataclass
+class RuleChainGenerateEntity(BaseEntity):
+    user_prompt: str
+    chat_history: list
+    integration_id: int
+    is_generated: Optional[bool] = False
+

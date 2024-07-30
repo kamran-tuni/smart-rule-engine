@@ -4,13 +4,14 @@ import json
 
 
 mocked_rule_chain = """{
+    "name": "default",
     "nodes": [
         {
             "id": "35a71065-8cbc-4007-bddb-28431d014e31",
             "name": "Temperature Source Room 24",
             "type": "source_node",
             "config": {
-                "device_id": 11,
+                "device_id": "2d094910-ce67-11ed-9b15-dd2dac50548f",
                 "parameter_id": "temperature"
             },
             "target_node_id": "15f39e2c-5c7e-4847-a56d-fb157a15205d"
@@ -54,13 +55,13 @@ mocked_rule_chain = """{
             "type": "action_node",
             "config": [
                 {
-                    "device_id": 13,
-                    "parameter_id": "relay0",
+                    "device_id": "28c69650-ce67-11ed-9b15-dd2dac50548f",
+                    "parameter_id": "Heat Relay",
                     "value": 1
                 },
                 {
-                    "device_id": 13,
-                    "parameter_id": "relay1",
+                    "device_id": "28c69650-ce67-11ed-9b15-dd2dac50548f",
+                    "parameter_id": "Cool Relay",
                     "value": 0
                 }
             ]
@@ -71,13 +72,13 @@ mocked_rule_chain = """{
             "type": "action_node",
             "config": [
                 {
-                    "device_id": 13,
-                    "parameter_id": "relay0",
+                    "device_id": "28c69650-ce67-11ed-9b15-dd2dac50548f",
+                    "parameter_id": "Heat Relay",
                     "value": 0
                 },
                 {
-                    "device_id": 13,
-                    "parameter_id": "relay1",
+                    "device_id": "28c69650-ce67-11ed-9b15-dd2dac50548f",
+                    "parameter_id": "Cool Relay",
                     "value": 1
                 }
           ]
@@ -88,13 +89,13 @@ mocked_rule_chain = """{
             "type": "action_node",
             "config": [
                 {
-                    "device_id": 13,
-                    "parameter_id": "relay0",
+                    "device_id": "28c69650-ce67-11ed-9b15-dd2dac50548f",
+                    "parameter_id": "Heat Relay",
                     "value": 0
                 },
                 {
-                "device_id": 13,
-                "parameter_id": "relay1",
+                "device_id": "28c69650-ce67-11ed-9b15-dd2dac50548f",
+                "parameter_id": "Cool Relay",
                 "value": 0
                 }
             ]

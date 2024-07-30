@@ -28,3 +28,13 @@ class DeviceData(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class RuleChain(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    nodes = models.JSONField()
+
+    integration = models.ForeignKey(Integration, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name

@@ -1,5 +1,7 @@
 from django.db import connection
 from django_tenants.middleware.main import TenantMainMiddleware
+from django.http import JsonResponse
+
 from backend.tenant.models import Client
 
 
@@ -16,8 +18,7 @@ class CustomTenantMiddleware(TenantMainMiddleware):
         try:
             tenant = self.get_tenant(name=tenant_name)
         except Client.DoesNotExist:
-            self.no_tenant_found(request, tenant_name)
-            return
+            tenant = self.get_tenant(name='Core Tenant')
 
         request.tenant = tenant
         connection.set_tenant(request.tenant)

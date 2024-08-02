@@ -9,6 +9,7 @@ from core.entities.rule_engine import (
     RuleChainGenerateEntity,
 )
 from core.db_repos.rule_engine import RuleChainRepo
+from core.db_repos.iot_platform import DeviceDataRepo
 
 from typing import Dict, Any, Optional, List
 
@@ -67,9 +68,15 @@ class BulkDeleteRuleChainUseCase:
 
 
 class GenerateRuleChainUseCase:
-    def __init__(self, ai_client: AIClient, rule_chain_repo: RuleChainRepo):
+    def __init__(
+        self,
+        ai_client: AIClient,
+        rule_chain_repo: RuleChainRepo,
+        device_data_repo: DeviceDataRepo
+    ):
         self.ai_client = ai_client
         self.rule_chain_repo = rule_chain_repo
+        self.device_data_repo = device_data_repo
         self.rule_chain_entity = None
 
     def set_params(self, data):
@@ -79,7 +86,7 @@ class GenerateRuleChainUseCase:
         messages = [
             {
                 "role": "system",
-                "content": f"{system_prompt}{system_data}{expected_rule_chain}"
+                "content": f"{system_prompt}{self.get_system_data()}{expected_rule_chain}"
             }
         ] + self.rule_chain_generate_entity.chat_history + [
             {
@@ -103,7 +110,7 @@ class GenerateRuleChainUseCase:
             self.rule_chain_generate_entity.chat_history = messages + [
                 {
                     "role": "assistant",
-                    "content": "Rule Chain is generated successfully!"
+                    "content": f"Rule Chain is generated successfully with name {self.rule_chain_entity.name} Refer to it with this name if need to change anything or delete this rule chain. You can also list all the rule chains currently in system by asking me about it."
                 }
             ]
         except Exception as ex:
@@ -126,6 +133,15 @@ class GenerateRuleChainUseCase:
         self.rule_chain_repo.create(
             **self.rule_chain_entity.to_dict(exclude_fields=['id'])
         )
+
+    def get_system_data(self):
+        device_data_entities = self.device_data_repo.get_by_integration_id(
+            integration_id=self.rule_chain_generate_entity.integration_id
+        )
+        return [
+            entity.to_dict(exclude_fields=['id', 'integration_id'])
+            for entity in device_data_entities
+        ]
 
 
 class RuleChainExecutorUsecase:

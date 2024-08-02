@@ -2,6 +2,7 @@ from core.services.iot_platform import IoTPlatformClient
 from core.db_repos.iot_platform import DeviceDataRepo
 from core.db_repos.integration import IntegrationRepo
 from core.entities.iot_platform import DeviceDataEntity
+from core.entities.exceptions.iot_platform import DeviceDataAlreadyExist
 
 from datetime import datetime, timedelta
 from pytz import UTC
@@ -53,9 +54,12 @@ class ExtractDeviceDataUsecase:
     def save_data(self):
         for devices_data_entity in self.devices_data_entities:
             devices_data_entity.integration_id = self.integration_id
-            self.device_data_repo.create(
-                **devices_data_entity.to_dict(exclude_fields=['id'])
-            )
+            try:
+                self.device_data_repo.create(
+                    **devices_data_entity.to_dict(exclude_fields=['id'])
+                )
+            except DeviceDataAlreadyExist:
+                continue
 
 
 class ExtractAllIntegrationsDeviceDataUsecase:

@@ -1,0 +1,24 @@
+.login-logo {
+    display: block;
+    margin: 0 auto;
+    width: 80%;
+    height: auto;
+    max-width: 520px;
+}
+
+.grid-container {
+   height: 100vh;
+}
+
+.logo-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

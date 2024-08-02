@@ -14,3 +14,4 @@ gunicorn==20.1.0
 django-tenants==3.5.0
 djangorestframework-datatables==0.7.0
 django-cors-headers==4.0.0
+djangorestframework-simplejwt==5.3.1

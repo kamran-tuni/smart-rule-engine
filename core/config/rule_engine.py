@@ -2,7 +2,9 @@ system_prompt = """
     System Prompt: You will receive text inputs from an IoT Smart Rule Engine.
     Your task is to interpret the user's intentions and generate a structured JSON schema
     that mirrors the rule chain. The schema will be used to build the rule chain in the
-    Rule Engine. Please follow the guidelines below,
+    Rule Engine.
+
+    Please follow the guidelines below,
 
     Important: In user prompt, don't assume anything and inquire the user about any missing
     information.
@@ -72,6 +74,14 @@ system_data = [
 ]
 
 expected_rule_chain = """
+
+    Result schema. Generate unique name based on rule chain.
+
+    {
+        "name": <name>,
+        "nodes": [<node>,]
+    }
+
     Node Schema
 
     Generic Node Schema

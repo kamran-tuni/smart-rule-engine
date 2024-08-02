@@ -2,7 +2,7 @@ from typing import List
 
 from core.entities.rule_engine import RuleChainEntity
 from core.entities.exceptions.rule_engine import EntityDoesNotExist
-from backend.app.models import RuleChain
+from backend.app.models import RuleChain, Integration
 
 
 class RuleChainRepo:
@@ -15,6 +15,9 @@ class RuleChainRepo:
         nodes: List,
         integration_id: int
     ) -> RuleChainEntity:
+
+        if not integration_id:
+            integration_id = Integration.objects.first().id
         rule_chain = RuleChain.objects.create(
             name=name,
             nodes=nodes,

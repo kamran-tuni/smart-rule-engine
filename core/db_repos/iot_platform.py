@@ -2,6 +2,7 @@ import uuid
 
 from core.entities.iot_platform import DeviceDataEntity, DeviceParameterEntity
 from core.entities.integration import IntegrationEntity
+from core.entities.exceptions.iot_platform import DeviceDataAlreadyExist
 from backend.app.models import DeviceData, Integration
 
 
@@ -13,6 +14,15 @@ class DeviceDataRepo:
         parameters: list,
         integration_id: int
     ) -> DeviceDataEntity:
+
+        is_entry_exist = DeviceData.objects.filter(
+            device_id=device_id,
+            integration_id=integration_id
+        ).exists()
+
+        if is_entry_exist:
+            raise DeviceDataAlreadyExist
+
         device_data = DeviceData.objects.create(
             device_id=device_id,
             name=name,

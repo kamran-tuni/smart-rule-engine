@@ -8,7 +8,10 @@ from core.usecases.rule_engine import (
     DeleteRuleChainUseCase,
     BulkDeleteRuleChainUseCase,
 )
-from core.factories.iot_platform import UpdateDeviceAttributeUseCaseFactory
+from core.factories.iot_platform import (
+    UpdateDeviceAttributeUseCaseFactory,
+    DeviceDataRepoFactory,
+)
 from core.db_repos.rule_engine import RuleChainRepo
 from core.services.ai import AIClient
 
@@ -58,10 +61,12 @@ class GenerateRuleChainUseCaseFactory:
     def get():
         ai_client = AIClientFactory.get()
         rule_chain_repo = RuleChainRepoFactory.get()
+        device_data_repo = DeviceDataRepoFactory.get()
 
         return GenerateRuleChainUseCase(
             ai_client=ai_client,
-            rule_chain_repo=rule_chain_repo
+            rule_chain_repo=rule_chain_repo,
+            device_data_repo=device_data_repo
         )
 
 

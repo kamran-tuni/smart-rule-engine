@@ -3,6 +3,9 @@ from core.usecases.rule_engine import (
     RuleChainExecutorUsecase,
     AllRuleChainsExecutorUsecase,
     GenerateRuleChainUseCase,
+    CreateRuleChainUseCase,
+    UpdateRuleChainUseCase,
+    DeleteRuleChainUseCase,
     ListRuleChainUseCase,
     RetrieveRuleChainUseCase,
     DeleteRuleChainUseCase,
@@ -26,6 +29,20 @@ class RuleChainRepoFactory:
     @staticmethod
     def get() -> RuleChainRepo:
         return RuleChainRepo()
+
+
+class CreateRuleChainUseCaseFactory:
+    @staticmethod
+    def get() -> CreateRuleChainUseCase:
+        rule_chain_repo = RuleChainRepoFactory.get()
+        return CreateRuleChainUseCase(rule_chain_repo=rule_chain_repo)
+
+
+class UpdateRuleChainUseCaseFactory:
+    @staticmethod
+    def get() -> UpdateRuleChainUseCase:
+        rule_chain_repo = RuleChainRepoFactory.get()
+        return UpdateRuleChainUseCase(rule_chain_repo=rule_chain_repo)
 
 
 class ListRuleChainUseCaseFactory:
@@ -62,11 +79,17 @@ class GenerateRuleChainUseCaseFactory:
         ai_client = AIClientFactory.get()
         rule_chain_repo = RuleChainRepoFactory.get()
         device_data_repo = DeviceDataRepoFactory.get()
+        create_rule_chain_usecase = CreateRuleChainUseCaseFactory.get()
+        update_rule_chain_usecase = UpdateRuleChainUseCaseFactory.get()
+        delete_rule_chain_usecase = DeleteRuleChainUseCaseFactory.get()
 
         return GenerateRuleChainUseCase(
             ai_client=ai_client,
             rule_chain_repo=rule_chain_repo,
-            device_data_repo=device_data_repo
+            device_data_repo=device_data_repo,
+            create_rule_chain_usecase=create_rule_chain_usecase,
+            update_rule_chain_usecase=update_rule_chain_usecase,
+            delete_rule_chain_usecase=delete_rule_chain_usecase
         )
 
 

@@ -4,7 +4,9 @@ from settings import AI_API_KEY
 
 # TODO: Remove this once AI is integrated
 from core.tests.rule_engine.mock import (
-    mocked_rule_chain
+    mocked_rule_chain,
+    mocked_edit_chain,
+    mocked_delete_chain
 )
 
 
@@ -21,7 +23,7 @@ class AIClient:
 
     def send_prompt(self, messages: str) -> Any:
         # TODO: Remove this once AI is integrated
-        return mocked_rule_chain
+        return mocked_delete_chain
 
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo",

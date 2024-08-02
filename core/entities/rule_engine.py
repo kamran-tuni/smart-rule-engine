@@ -119,6 +119,16 @@ class RuleChainEntity(BaseEntity):
         integration_id = data["integration_id"]
         return cls(id=id, name=name, nodes=nodes, integration_id=integration_id)
 
+    def update_from_dict(self, data: dict):
+        self.id = data.get("id", self.id)
+        self.name = data.get("name", self.name)
+        if data.get('nodes', None):
+            self.nodes = [
+                NodeEntity.from_dict(node_data)
+                for node_data in data.get('nodes')
+            ]
+        self.integration_id = data.get("integration_id", self.integration_id)
+
     def to_dict(self, exclude_fields: List[str] = []) -> dict:
         data = {
             'name': self.name,

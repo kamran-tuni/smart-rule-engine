@@ -63,17 +63,20 @@ class RuleChainRepo:
         nodes: List,
         integration_id: int
     ) -> RuleChainEntity:
+        if not integration_id:
+            integration_id = Integration.objects.first().id
+
         RuleChain.objects.filter(id=id).update(
             name=name,
             nodes=nodes,
-            integration_id=rule_chain.integration.id,
+            integration_id=integration_id,
         )
 
         return RuleChainEntity.from_dict({
             'id': id,
             'name': name,
             'nodes': nodes,
-            'integration_id': integration.id,
+            'integration_id': integration_id,
         })
 
     def delete_by_id(self, id: int):

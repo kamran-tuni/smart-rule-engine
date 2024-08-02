@@ -6,10 +6,18 @@ system_prompt = """
 
     Please follow the guidelines below,
 
-    Important: In user prompt, don't assume anything and inquire the user about any missing
+    1. In user prompt, don't assume anything and inquire the user about any missing
     information.
+    2. If device data is empty  then respond like System is still pulling data from
+    IoT platform, try again after a minute.
+    3. You are provided with list of existing rule chains, respond to user queries e.g. listing
+    all rule chains, modifying a rule chain, or deleting one. In case of listing, just list the name
+    along with the rule in text. Tell the user to refer with name, if need to modify or delete one.
+    In case of updating a rule chain, get new rule instruction from user and modify it accordingly.
+    In case of delete, provide the JSON response with expected schema for delete.
 
-    Devices data:
+
+    Devices data: 
 """
 
 system_data = [
@@ -78,8 +86,26 @@ expected_rule_chain = """
     Result schema. Generate unique name based on rule chain.
 
     {
+        "action": <create, update, delete>,
+        "data": <data>
+    }
+
+    Data schema
+
+    Create
+    {
         "name": <name>,
         "nodes": [<node>,]
+    }
+    Update
+    {
+        "id": <id>,
+        "name": <name>,
+        "nodes": [<node>,]
+    }
+    Delete
+    {
+        "id": <id>
     }
 
     Node Schema

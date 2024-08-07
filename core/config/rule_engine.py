@@ -1,24 +1,24 @@
 system_prompt = """
-    System Prompt: You will receive text inputs from an IoT Smart Rule Engine.
+    You will receive text inputs from an IoT Smart Rule Engine.
     Your task is to interpret the user's intentions and generate a structured JSON schema
-    that mirrors the rule chain. The schema will be used to build the rule chain in the
+    that mirrors the rule chain. This schema will be used to build the rule chain in the
     Rule Engine.
 
-    Please follow the guidelines below,
+    Please follow these guidelines:
 
-    1. In user prompt, don't assume anything and inquire the user about any missing
-    information.
-    2. If device data is empty  then respond like System is still pulling data from
-    IoT platform, try again after a minute.
-    3. You are provided with list of existing rule chains, respond to user queries e.g. listing
-    all rule chains, modifying a rule chain, or deleting one. In case of listing, just list the name
-    along with the rule in text. Tell the user to refer with name, if need to modify or delete one.
-    In case of updating a rule chain, get new rule instruction from user and modify it accordingly.
-    In case of delete, provide the JSON response with expected schema for delete.
-
-
-    Devices data: 
+    1. Do not assume any missing information in the user's prompt. Inquire about any missing details.
+    2. If the Device Data in system command is empty, respond with: "System is still pulling data from IoT platform, try again after a minute."
+    3. You have a list of existing rule chains. Respond to user queries such as listing all rule chains, modifying a rule chain, or deleting one:
+       - For listing, provide the name and rule in text, and instruct the user to refer to the name if they need to modify or delete one.
+       - For updating a rule chain, obtain new rule instructions from the user and modify accordingly.
+       - For deletion, provide the JSON response with the expected schema for deletion. If the name is not found in your rule chain list, respond with an appropriate message.
+    4. When asked to create a rule chain:
+       - Always first check if a name is provided. If the name is already in the list, respond that this rule already exist e.g.
+       - If no name is provided, ask the user to provide a unique name for the rule engine.
+    5. When the JSON schema is ready, provide only the JSON response without any additional text.
+    6. Create only one script node.
 """
+
 
 system_data = [
     {
@@ -83,7 +83,7 @@ system_data = [
 
 expected_rule_chain = """
 
-    Result schema. Generate unique name based on rule chain.
+    Result schema.
 
     {
         "action": <create, update, delete>,
@@ -92,30 +92,29 @@ expected_rule_chain = """
 
     Data schema
 
-    Create
+    Create, Get name from user
     {
         "name": <name>,
         "nodes": [<node>,]
     }
-    Update
+    Update, Get name from user
     {
-        "id": <id>,
         "name": <name>,
         "nodes": [<node>,]
     }
-    Delete
+    Delete, Get name from user, delete in bulk return list of names as in following schema
     {
-        "id": <id>
+        "name": [<name>,...]
     }
 
     Node Schema
 
-    Generic Node Schema
+    Generic Node Schema, Each node in the schema should have a valid UUID for the 'id' field. A valid UUID is a 32-character lowercase hexadecimal string: "fd8f739e-27a6-4086-b096-2ab368d73596".
 
     {
-        "id": <id>,
+        "id": <id>
         "name": <name>,
-        "type": <source, script, switch, action>,
+        "type": <source_node, script_node, switch_node, action_node>,
         "config": <config>,
         "target_node_id": <id>
 
@@ -125,15 +124,15 @@ expected_rule_chain = """
 
 
     {
-      "device_id": <device_name>,
+      "device_id": <device_id>,
       "parameter_id": <parameter_name>
     }
 
-    Script Node Configuration. Multiple inputs (input<input_no>), one output. It handles main rule chain logic. It should be JavaScript. The script should return the result.
-
+    Script Node Configuration. Once input, one output (int, float, str, bool), one function. It handles main rule chain logic. It should be JavaScript. The script should return the result.
+    Following is example script.
     {
 
-      "script": <script>
+      "script": <var executeScript = function(input0) {return result;}>
 
     }
 
@@ -151,7 +150,7 @@ expected_rule_chain = """
 
     [
         {
-            "device_id": <device_name>,
+            "device_id": <device_id>,
             "parameter_id": <parameter_name>,
             "value": <value>
         }

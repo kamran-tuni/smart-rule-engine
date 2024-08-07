@@ -8,4 +8,4 @@ class SignupSerializer(serializers.Serializer):
     password = serializers.CharField(max_length=128, write_only=True)
     platform = serializers.CharField(max_length=255)
     base_url = serializers.CharField(max_length=255)
-    api_key = serializers.CharField(max_length=255)
+    api_key = serializers.CharField(max_length=1024)

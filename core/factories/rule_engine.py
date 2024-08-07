@@ -5,11 +5,12 @@ from core.usecases.rule_engine import (
     GenerateRuleChainUseCase,
     CreateRuleChainUseCase,
     UpdateRuleChainUseCase,
-    DeleteRuleChainUseCase,
     ListRuleChainUseCase,
     RetrieveRuleChainUseCase,
-    DeleteRuleChainUseCase,
-    BulkDeleteRuleChainUseCase,
+    DeleteRuleChainByIdUseCase,
+    DeleteRuleChainByNameUseCase,
+    BulkDeleteRuleChainByIdUseCase,
+    BulkDeleteRuleChainByNameUseCase,
 )
 from core.factories.iot_platform import (
     UpdateDeviceAttributeUseCaseFactory,
@@ -59,18 +60,32 @@ class RetrieveRuleChainUseCaseFactory:
         return RetrieveRuleChainUseCase(rule_chain_repo)
 
 
-class DeleteRuleChainUseCaseFactory:
+class DeleteRuleChainByNameUseCaseFactory:
     @staticmethod
-    def get() -> DeleteRuleChainUseCase:
+    def get() -> DeleteRuleChainByNameUseCase:
         rule_chain_repo = RuleChainRepo()
-        return DeleteRuleChainUseCase(rule_chain_repo)
+        return DeleteRuleChainByNameUseCase(rule_chain_repo)
 
 
-class BulkDeleteRuleChainUseCaseFactory:
+class DeleteRuleChainByIdUseCaseFactory:
     @staticmethod
-    def get() -> BulkDeleteRuleChainUseCase:
+    def get() -> DeleteRuleChainByIdUseCase:
         rule_chain_repo = RuleChainRepo()
-        return BulkDeleteRuleChainUseCase(rule_chain_repo)
+        return DeleteRuleChainByIdUseCase(rule_chain_repo)
+
+
+class BulkDeleteRuleChainByIdUseCaseFactory:
+    @staticmethod
+    def get() -> BulkDeleteRuleChainByIdUseCase:
+        rule_chain_repo = RuleChainRepo()
+        return BulkDeleteRuleChainByIdUseCase(rule_chain_repo)
+
+
+class BulkDeleteRuleChainByNameUseCaseFactory:
+    @staticmethod
+    def get() -> BulkDeleteRuleChainByNameUseCase:
+        rule_chain_repo = RuleChainRepo()
+        return BulkDeleteRuleChainByNameUseCase(rule_chain_repo)
 
 
 class GenerateRuleChainUseCaseFactory:
@@ -80,16 +95,18 @@ class GenerateRuleChainUseCaseFactory:
         rule_chain_repo = RuleChainRepoFactory.get()
         device_data_repo = DeviceDataRepoFactory.get()
         create_rule_chain_usecase = CreateRuleChainUseCaseFactory.get()
+        list_rule_chain_usecase = ListRuleChainUseCaseFactory.get()
         update_rule_chain_usecase = UpdateRuleChainUseCaseFactory.get()
-        delete_rule_chain_usecase = DeleteRuleChainUseCaseFactory.get()
+        bulk_delete_rule_chain_by_name_usecase = BulkDeleteRuleChainByNameUseCaseFactory.get()
 
         return GenerateRuleChainUseCase(
             ai_client=ai_client,
             rule_chain_repo=rule_chain_repo,
             device_data_repo=device_data_repo,
             create_rule_chain_usecase=create_rule_chain_usecase,
+            list_rule_chain_usecase=list_rule_chain_usecase,
             update_rule_chain_usecase=update_rule_chain_usecase,
-            delete_rule_chain_usecase=delete_rule_chain_usecase
+            bulk_delete_rule_chain_by_name_usecase=bulk_delete_rule_chain_by_name_usecase
         )
 
 

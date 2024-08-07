@@ -56,6 +56,19 @@ class RuleChainRepo:
             'nodes': rule_chain.nodes
         })
 
+    def get_by_name(self, name: str) -> RuleChainEntity:
+        try:
+            rule_chain = RuleChain.objects.get(name=name)
+        except RuleChain.DoesNotExist:
+            raise EntityDoesNotExist
+
+        return RuleChainEntity.from_dict({
+            'id': rule_chain.id,
+            'integration_id': rule_chain.integration.id,
+            'name': rule_chain.name,
+            'nodes': rule_chain.nodes
+        })
+
     def update(
         self,
         id: int,
@@ -82,5 +95,11 @@ class RuleChainRepo:
     def delete_by_id(self, id: int):
         try:
             rule_chain = RuleChain.objects.get(id=id).delete()
+        except RuleChain.DoesNotExist:
+            raise EntityDoesNotExist
+
+    def delete_by_name(self, name: str):
+        try:
+            rule_chain = RuleChain.objects.get(name=name).delete()
         except RuleChain.DoesNotExist:
             raise EntityDoesNotExist

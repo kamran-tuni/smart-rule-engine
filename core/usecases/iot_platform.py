@@ -59,7 +59,9 @@ class ExtractDeviceDataUsecase:
                     **devices_data_entity.to_dict(exclude_fields=['id'])
                 )
             except DeviceDataAlreadyExist:
-                continue
+                self.device_data_repo.update(
+                    **devices_data_entity.to_dict()
+                )
 
 
 class ExtractAllIntegrationsDeviceDataUsecase:
@@ -75,18 +77,21 @@ class ExtractAllIntegrationsDeviceDataUsecase:
     def execute(self):
         self.integration_entities = self.integration_repo.get_all_entries()
         now = datetime.utcnow().replace(tzinfo=UTC)
-        for integration_entity in self.integration_entities:
-            if (
-                integration_entity.last_extraction_timestamp is None or
-                (now - integration_entity.last_extraction_timestamp) >= timedelta(minutes=10)
-            ):
-                self.extract_device_data_usecase.set_params(
-                    integration_id=integration_entity.id
-                )
-                self.extract_device_data_usecase.execute()
+        try:
+            for integration_entity in self.integration_entities:
+                if (
+                    integration_entity.last_extraction_timestamp is None or
+                    (now - integration_entity.last_extraction_timestamp) >= timedelta(minutes=10)
+                ):
+                    self.extract_device_data_usecase.set_params(
+                        integration_id=integration_entity.id
+                    )
+                    self.extract_device_data_usecase.execute()
 
-                integration_entity.last_extraction_timestamp = now
-                self.integration_repo.update(**integration_entity.to_dict())
+                    integration_entity.last_extraction_timestamp = now
+                    self.integration_repo.update(**integration_entity.to_dict())
+        except Exception as e:
+            print(e)
 
 
 class UpdateDeviceAttributeUsecase:

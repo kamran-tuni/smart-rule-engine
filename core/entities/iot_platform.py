@@ -28,7 +28,7 @@ class DeviceDataEntity(BaseEntity):
             'name': self.name,
             'parameters': [parameter.to_dict() for parameter in self.parameters],
             'integration_id': self.integration_id,
-            'id': id
+            'id': self.id
         }
         for field in exclude_fields:
             data.pop(field)

@@ -13,7 +13,7 @@ from backend.app.serializers.rule_engine import (
 from core.factories.rule_engine import (
     ListRuleChainUseCaseFactory,
     RetrieveRuleChainUseCaseFactory,
-    DeleteRuleChainUseCaseFactory,
+    DeleteRuleChainByIdUseCaseFactory,
     GenerateRuleChainUseCaseFactory
 )
 from backend.app.exceptions.rule_engine import rule_engine_exception_map
@@ -53,7 +53,7 @@ class RuleChainView(APIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
     def delete_rule_chain(self, request, pk):
-        delete_rule_chain_use_case = DeleteRuleChainUseCaseFactory.get()
+        delete_rule_chain_use_case = DeleteRuleChainByIdUseCaseFactory.get()
 
         try:
             delete_rule_chain_use_case.set_params(rule_chain_id=pk)
@@ -102,8 +102,12 @@ class GenerateRuleChainView(APIView):
 
         generate_rule_chain_use_case = GenerateRuleChainUseCaseFactory.get()
 
-        generate_rule_chain_use_case.set_params(
-            data=request.data
-        )
-        response_data = generate_rule_chain_use_case.execute()
+        try:
+            generate_rule_chain_use_case.set_params(
+                data=request.data
+            )
+            response_data = generate_rule_chain_use_case.execute()
+        except tuple(rule_engine_exception_map.keys()) as e:
+            api_exception = rule_engine_exception_map[type(e)]
+            raise api_exception
         return Response(response_data, status=status.HTTP_200_OK)

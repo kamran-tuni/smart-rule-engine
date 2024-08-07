@@ -52,7 +52,6 @@ class IoTPlatformTelemetryListener:
         print("Subscription message sent:", json.dumps(subscribe_object))
 
     async def handle_message(self, message: str) -> None:
-        print("Message received:", message)
         context = self.create_context(message=json.loads(message))
         if context:
             self.execute_rule_chains(context=context)

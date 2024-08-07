@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { apiEndpoints, appEndpoints } from '../config/Endpoints';
-
 import Cookies from 'js-cookie';
 
 
 const useGenerateRuleEngine = () => {
     const generateRuleEngine = async (data, setIsLoading, setMessages) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 40000);
+
         try {
             const csrfToken = Cookies.get('csrftoken');
             const response = await fetch(apiEndpoints.ruleEngine, {
@@ -15,21 +17,29 @@ const useGenerateRuleEngine = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(data),
-                credentials: 'include'
+                credentials: 'include',
+                signal: controller.signal
             });
 
-            const response_data = await response.json();
-            if (response.ok) {
+            clearTimeout(timeoutId);
 
+            if (!response.ok) {
+                const errorData = await response.json();
                 setIsLoading(false);
-                setMessages(response_data["chat_history"]);
-            } else {
-                throw new Error('Failed to send message');
-                window.location.href = appEndpoints.login;
+                return;
             }
+
+            const response_data = await response.json();
+            setIsLoading(false);
+            setMessages(response_data["chat_history"]);
         } catch (error) {
-            console.error('Error sending message:', error);
-            window.location.href = appEndpoints.login;
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                throw new Error('Request timeout: Please try again.');
+            } else {
+                throw new Error('Error generating rule engine');
+            }
+            setIsLoading(false);
         }
     };
 

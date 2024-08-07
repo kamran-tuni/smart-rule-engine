@@ -23,10 +23,10 @@ class AIClient:
 
     def send_prompt(self, messages: str) -> Any:
         # TODO: Remove this once AI is integrated
-        return mocked_delete_chain
+        # return mocked_rule_chain
 
-        response = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
+        completion = openai.chat.completions.create(
+            model="gpt-4o",
             messages=messages,
         )
-        return response
+        return completion.choices[0].message.content

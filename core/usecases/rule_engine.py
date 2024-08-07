@@ -41,15 +41,14 @@ class UpdateRuleChainUseCase:
         self.rule_chain_id: Optional[int] = None
         self.rule_chain_data: Optional[dict] = None
 
-    def set_params(self, rule_chain_id: int, rule_chain_data: dict) -> None:
-        self.rule_chain_id = rule_chain_id
+    def set_params(self, rule_chain_name: str, rule_chain_data: dict) -> None:
+        self.rule_chain_name = rule_chain_name
         self.rule_chain_data = rule_chain_data
-        self.rule_chain_entity = self.rule_chain_repo.get_by_id(
-            id=self.rule_chain_id
+        self.rule_chain_entity = self.rule_chain_repo.get_by_name(
+            name=self.rule_chain_name
         )
-        breakpoint()
+
         self.rule_chain_entity.update_from_dict(self.rule_chain_data)
-        self.rule_chain_entity.id = rule_chain_id
 
     def execute(self) -> dict:
         self.rule_chain_repo.update(**self.rule_chain_entity.to_dict())
@@ -82,7 +81,7 @@ class RetrieveRuleChainUseCase:
         return self.rule_chain_entity.to_dict()
 
 
-class DeleteRuleChainUseCase:
+class DeleteRuleChainByIdUseCase:
     def __init__(self, rule_chain_repo: RuleChainRepo) -> None:
         self.rule_chain_repo = rule_chain_repo
         self.rule_chain_id: Optional[int] = None
@@ -94,7 +93,19 @@ class DeleteRuleChainUseCase:
         self.rule_chain_repo.delete_by_id(id=self.rule_chain_id)
 
 
-class BulkDeleteRuleChainUseCase:
+class DeleteRuleChainByNameUseCase:
+    def __init__(self, rule_chain_repo: RuleChainRepo) -> None:
+        self.rule_chain_repo = rule_chain_repo
+        self.rule_chain_name: Optional[str] = None
+
+    def set_params(self, rule_chain_name: str) -> None:
+        self.rule_chain_name = rule_chain_name
+
+    def execute(self) -> None:
+        self.rule_chain_repo.delete_by_name(name=self.rule_chain_name)
+
+
+class BulkDeleteRuleChainByIdUseCase:
     def __init__(self, rule_chain_repo: RuleChainRepo) -> None:
         self.rule_chain_repo = rule_chain_repo
         self.rule_chain_ids: Optional[List[int]] = None
@@ -106,6 +117,18 @@ class BulkDeleteRuleChainUseCase:
         for _id in self.rule_chain_ids:
             self.rule_chain_repo.delete_by_id(id=_id)
 
+class BulkDeleteRuleChainByNameUseCase:
+    def __init__(self, rule_chain_repo: RuleChainRepo) -> None:
+        self.rule_chain_repo = rule_chain_repo
+        self.rule_chain_names: Optional[List[str]] = None
+
+    def set_params(self, rule_chain_names: List[str]) -> None:
+        self.rule_chain_names = rule_chain_names
+
+    def execute(self) -> None:
+        for _name in self.rule_chain_names:
+            self.rule_chain_repo.delete_by_name(name=_name)
+
 
 class GenerateRuleChainUseCase:
     def __init__(
@@ -114,15 +137,17 @@ class GenerateRuleChainUseCase:
         rule_chain_repo: RuleChainRepo,
         device_data_repo: DeviceDataRepo,
         create_rule_chain_usecase: CreateRuleChainUseCase,
+        list_rule_chain_usecase: ListRuleChainUseCase,
         update_rule_chain_usecase: UpdateRuleChainUseCase,
-        delete_rule_chain_usecase: DeleteRuleChainUseCase
+        bulk_delete_rule_chain_by_name_usecase: BulkDeleteRuleChainByNameUseCase
     ):
         self.ai_client = ai_client
         self.rule_chain_repo = rule_chain_repo
         self.device_data_repo = device_data_repo
         self.create_rule_chain_usecase = create_rule_chain_usecase
+        self.list_rule_chain_usecase = list_rule_chain_usecase
         self.update_rule_chain_usecase = update_rule_chain_usecase
-        self.delete_rule_chain_usecase = delete_rule_chain_usecase
+        self.bulk_delete_rule_chain_by_name_usecase = bulk_delete_rule_chain_by_name_usecase
         self.rule_chain_entity = None
 
     def set_params(self, data):
@@ -131,7 +156,12 @@ class GenerateRuleChainUseCase:
         self.messages = [
             {
                 "role": "system",
-                "content": f"{system_prompt}{self.get_system_data()}{expected_rule_chain}"
+                "content": (
+                    f"{system_prompt}"
+                    f" Devices Data: {self.get_system_data()} \n"
+                    f" Rule Chains: {self.get_rule_chains()} \n"
+                    f" Expected Rule Chain: {expected_rule_chain} \n"
+                )
             }
         ] + self.rule_chain_generate_entity.chat_history + [
             {
@@ -145,11 +175,12 @@ class GenerateRuleChainUseCase:
             messages=self.messages
         )
 
-        is_valid_json, response_data = get_valid_json(response)
+        is_valid_json, response_json = get_valid_json(response)
+
         if is_valid_json:
-            self.process_json_data(data=response_data)
+            self.process_json_data(data=response_json)
         else:
-            self.process_normal_message(message=response_data)
+            self.process_normal_message(message=response)
 
         self.remove_system_prompt()
         return self.rule_chain_generate_entity.to_dict()
@@ -165,9 +196,7 @@ class GenerateRuleChainUseCase:
 
     def process_json_data(self, data):
         self.rule_chain_generate_entity.is_generated = True
-        # TODO: Remove this once AI API is used
-        import uuid
-        data["data"]["name"] = str(uuid.uuid4())
+
         if "create" in data["action"]:
             device_name = data["data"]["name"]
 
@@ -203,7 +232,7 @@ class GenerateRuleChainUseCase:
             self.update_chat_history(
                 role="assistant",
                 content=(
-                    f"Rule Chain is deleted successfully."
+                    f"Rule Chain(s) are deleted successfully."
                 )
             )
 
@@ -222,18 +251,18 @@ class GenerateRuleChainUseCase:
 
 
     def update_rule_chain(self, data):
-        rule_chain_id = data.pop("id")
+        rule_chain_name = data.pop("name")
         data["integration_id"] = self.rule_chain_generate_entity.integration_id
 
         self.update_rule_chain_usecase.set_params(
-            rule_chain_id=rule_chain_id,
+            rule_chain_name=rule_chain_name,
             rule_chain_data=data
         )
         self.update_rule_chain_usecase.execute()
 
     def delete_rule_chain(self, data):
-        self.delete_rule_chain_usecase.set_params(rule_chain_id=data["id"])
-        self.delete_rule_chain_usecase.execute()
+        self.bulk_delete_rule_chain_by_name_usecase.set_params(rule_chain_names=data["name"])
+        self.bulk_delete_rule_chain_by_name_usecase.execute()
 
 
     def update_chat_history(self, role, content):
@@ -249,6 +278,10 @@ class GenerateRuleChainUseCase:
             entry for entry in self.rule_chain_generate_entity.chat_history
             if entry["role"] != "system"
         ]
+
+    def get_rule_chains(self):
+        return self.list_rule_chain_usecase.execute()
+
 
 class RuleChainExecutorUsecase:
     def __init__(self, update_device_attribute_usecase: UpdateDeviceAttributeUsecase) -> None:
@@ -314,15 +347,22 @@ class RuleChainExecutorUsecase:
         node: NodeEntity,
     ) -> Optional[str]:
         _input = self.intermediate_context["input"]
+        target_node_ids = (
+            node.target_node_id if isinstance(node.target_node_id, list)
+            else [node.target_node_id]
+        )
+
         for index, condition in enumerate(node.config):
             if condition.condition == "==" and condition.value == _input:
-                return str(node.target_node_id[index])
+                if index < len(target_node_ids) and target_node_ids[index] is not None:
+                    return str(target_node_ids[index])
         return None
 
     def execute_action_node(self, node: NodeEntity) -> None:
         for action in node.config:
             device = self.context["devices"].setdefault(action.device_id, {})
             device[action.parameter_id] = action.value
+
             self.perform_action(
                 device_id=action.device_id,
                 key=action.parameter_id,

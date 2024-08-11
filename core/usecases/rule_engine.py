@@ -205,9 +205,9 @@ class GenerateRuleChainUseCase:
                 role="assistant",
                 content=(
                     f"Rule Chain is generated successfully with name"
-                    f" {device_name} Refer to it with this name"
+                    f" {device_name}. Refer to it with this name"
                     f" if need to change anything or delete this rule chain."
-                    f" You can also list all the rule chains currently in system"
+                    f" You can also list all the rule chains currently in the system"
                     f" by asking me about it."
                 )
             )
@@ -220,9 +220,9 @@ class GenerateRuleChainUseCase:
                 role="assistant",
                 content=(
                     f"Rule Chain is updated successfully with name"
-                    f" {device_name} Refer to it with this name"
+                    f" {device_name}. Refer to it with this name"
                     f" if need to change anything or delete this rule chain."
-                    f" You can also list all the rule chains currently in system"
+                    f" You can also list all the rule chains currently in the system"
                     f" by asking me about it."
                 )
             )
@@ -384,7 +384,7 @@ class AllRuleChainsExecutorUsecase:
     def __init__(
         self,
         rule_chain_repo: RuleChainRepo,
-        rule_chain_executor_usecase: GenerateRuleChainUseCase,
+        rule_chain_executor_usecase: RuleChainExecutorUsecase,
     ) -> None:
         self.rule_chain_executor_usecase = rule_chain_executor_usecase
         self.rule_chain_repo = rule_chain_repo

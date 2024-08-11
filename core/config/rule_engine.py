@@ -17,6 +17,7 @@ system_prompt = """
        - If no name is provided, ask the user to provide a unique name for the rule engine.
     5. When the JSON schema is ready, provide only the JSON response without any additional text.
     6. Create only one script node.
+    7. Before creating rule chain, rephrase it and confirm from user if the rule is correct. Create it if user confirms it otherwise ask the user what needs to be changed.
 """
 
 

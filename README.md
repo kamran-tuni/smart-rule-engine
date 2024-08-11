@@ -45,8 +45,6 @@ The Smart Rule Engine is a generative AI-powered rule engine that leverages GPT-
     DEBUG=DEBUG
     ENVIRONMENT=DEV
     AI_API_KEY=AI_API_KEY
-    IoT_PLATFORM_API_KEY=IoT_PLATFORM_API_KEY
-    IoT_PLATFORM_BASE_URL=IoT_PLATFORM_BASE_URL
     REDIS_ENDPOINT=localhost
     DB_ENDPOINT=localhost
     DB_NAME=DB_NAME
